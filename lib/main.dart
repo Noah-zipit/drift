@@ -100,7 +100,6 @@ class _GameScreen extends StatelessWidget {
       );
     }
   }
-}
 
 class _AudioLifecycle extends WidgetsBindingObserver {
   _AudioLifecycle(this.game);
