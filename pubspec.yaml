@@ -1,0 +1,33 @@
+name: block_puzzle
+description: Drift — a juicy little block puzzle game built with Flutter + Flame.
+publish_to: 'none'
+version: 0.1.0+1
+
+environment:
+  sdk: '>=3.4.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # Rendering & game loop. 1.x line; 1.37.0 was the latest 1.x at the time of
+  # writing. Only long-stable APIs are used (FlameGame, Component,
+  # PositionComponent, TextPaint, GameWidget + overlays).
+  flame: ^1.37.0
+
+  # Ambient pad loop + soft SFX (audioplayers directly: one looping music
+  # player plus a small SFX pool).
+  audioplayers: ^6.0.0
+
+  # Best score + audio preferences persistence.
+  shared_preferences: ^2.3.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/audio/
