@@ -3,6 +3,7 @@
 
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 import '../models/board.dart';
 import '../models/piece_shape.dart';
@@ -39,12 +40,61 @@ class BoardComponent extends Component {
   final List<List<double>> clearDelay =
       List.generate(Board.size, (_) => List.filled(Board.size, 0.0));
 
+  /// Ghost preview of the dragged piece's would-be landing spot.
+  /// null when no preview is active.
+  PieceShape? previewShape;
+  int previewRow = -1;
+  int previewCol = -1;
+  int previewColor = 0;
+
+  /// Seconds since the preview became active; drives the gentle pulse.
+  double _previewT = 0.0;
+
+  /// Shows a translucent ghost where the dragged piece would land on drop.
+  void setPreview(PieceShape shape, int row, int col, int colorIndex) {
+    if (previewShape == null ||
+        previewRow != row ||
+        previewCol != col ||
+        previewColor != colorIndex) {
+      previewRow = row;
+      previewCol = col;
+      previewColor = colorIndex;
+      previewShape = shape;
+      _previewT = 0.0;
+    }
+  }
+
+  /// Hides the ghost preview.
+  void clearPreview() {
+    previewShape = null;
+    _previewT = 0.0;
+  }
+
+  bool _inPreview(int r, int c) {
+    final s = previewShape;
+    if (s == null) {
+      return false;
+    }
+    final lr = r - previewRow;
+    final lc = c - previewCol;
+    if (lr < 0 || lc < 0 || lr >= s.height || lc >= s.width) {
+      return false;
+    }
+    for (final cell in s.cells) {
+      if (cell.x == lc && cell.y == lr) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   void layout(Vector2 boardOrigin, double cellSize) {
     origin = boardOrigin.clone();
     cell = cellSize;
   }
 
   void reset() {
+    clearPreview();
     for (var r = 0; r < Board.size; r++) {
       for (var c = 0; c < Board.size; c++) {
         colours[r][c] = -1;
@@ -88,6 +138,9 @@ class BoardComponent extends Component {
 
   @override
   void update(double dt) {
+    if (previewShape != null) {
+      _previewT += dt;
+    }
     for (var r = 0; r < Board.size; r++) {
       for (var c = 0; c < Board.size; c++) {
         if (appear[r][c] < 1.0) {
@@ -136,6 +189,40 @@ class BoardComponent extends Component {
             Radius.circular(cell * 0.2),
           );
           canvas.drawRRect(rect, Paint()..color = Palette.emptyCell);
+          if (_inPreview(r, c)) {
+            // Ghost landing preview: translucent candy cell with a
+            // glowing outline and a soft top sheen, gently pulsing.
+            final pulse = 0.5 + 0.5 * sin(_previewT * 6.0);
+            final base = Palette.pieces[previewColor % Palette.pieces.length];
+            final alpha = 0.26 + 0.10 * pulse;
+            canvas.drawRRect(
+              rect,
+              Paint()..color = base.withValues(alpha: alpha),
+            );
+            canvas.drawRRect(
+              rect,
+              Paint()
+                ..style = PaintingStyle.stroke
+                ..strokeWidth = max(1.0, cell * 0.045)
+                ..color = Palette.highlight(base)
+                    .withValues(alpha: 0.35 + 0.18 * pulse),
+            );
+            final gloss = RRect.fromRectAndRadius(
+              Rect.fromLTWH(
+                x + gap + (cell - gap * 2) * 0.05,
+                y + gap,
+                (cell - gap * 2) * 0.9,
+                (cell - gap * 2) * 0.44,
+              ),
+              Radius.circular(cell * 0.14),
+            );
+            canvas.drawRRect(
+              gloss,
+              Paint()
+                ..color = Palette.highlight(base)
+                    .withValues(alpha: alpha * 0.55),
+            );
+          }
           continue;
         }
 
