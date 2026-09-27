@@ -1,7 +1,8 @@
 // Renders the 8x8 board: dark navy panel, glossy candy cells, ghost
 // preview, and the staggered pop animation used for line clears.
 
-import 'package:flame/flame.dart';
+import 'package:flame/components.dart';
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import '../models/board.dart';
@@ -192,7 +193,7 @@ class BoardComponent extends Component {
           ),
           Radius.circular(cell * 0.2 * scale),
         );
-        canvas.drawRRect(rect, Paint()..color = base.withOpacity(alpha));
+        canvas.drawRRect(rect, Paint()..color = base.withValues(alpha: alpha));
 
         // Glossy top sheen.
         final gloss = RRect.fromRectAndRadius(
@@ -205,7 +206,7 @@ class BoardComponent extends Component {
         );
         canvas.drawRRect(
           gloss,
-          Paint()..color = Palette.highlight(base).withOpacity(alpha * 0.8),
+          Paint()..color = Palette.highlight(base).withValues(alpha: alpha * 0.8),
         );
 
         // Bottom shade for glossy depth.
@@ -219,7 +220,7 @@ class BoardComponent extends Component {
         );
         canvas.drawRRect(
           shadeRect,
-          Paint()..color = Palette.shade(base).withOpacity(alpha * 0.55),
+          Paint()..color = Palette.shade(base).withValues(alpha: alpha * 0.55),
         );
       }
     }
@@ -229,9 +230,9 @@ class BoardComponent extends Component {
     if (g != null) {
       final tint = g.valid ? Palette.ghostValid : Palette.ghostInvalid;
       final ghostAlpha = g.valid ? 0.38 : 0.30;
-      for (final cell in g.shape.cells) {
-        final r = g.row + cell.y;
-        final c = g.col + cell.x;
+      for (final pc in g.shape.cells) {
+        final r = g.row + pc.y;
+        final c = g.col + pc.x;
         if (r < 0 || r >= Board.size || c < 0 || c >= Board.size) {
           continue;
         }
@@ -246,7 +247,7 @@ class BoardComponent extends Component {
         );
         canvas.drawRRect(
           rect,
-          Paint()..color = tint.withOpacity(ghostAlpha),
+          Paint()..color = tint.withValues(alpha: ghostAlpha),
         );
       }
     }
