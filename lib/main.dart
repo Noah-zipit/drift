@@ -1,4 +1,3 @@
-import 'package:flame/flame.dart'; // Vector2
 import 'package:flame/game.dart'; // GameWidget
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
