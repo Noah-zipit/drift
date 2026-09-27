@@ -223,10 +223,15 @@ class BlockPuzzleGame extends FlameGame {
       return;
     }
     final shape = piece.shape;
-    final topLeftX = pos.x - shape.width * cell / 2;
-    final topLeftY = pos.y - shape.height * cell / 2;
-    final col = ((topLeftX - boardOrigin.x) / cell).round();
-    final row = ((topLeftY - boardOrigin.y) / cell).round();
+    // Use the piece's live rendered cell size (it grows to full board size
+    // on pickup) and the board view's actual grid, so the tinted preview
+    // hugs the dragged piece exactly instead of being drawn oversized.
+    final c = piece.cellPx;
+    final grid = boardView.cell;
+    final topLeftX = pos.x - shape.width * c / 2;
+    final topLeftY = pos.y - shape.height * c / 2;
+    final col = ((topLeftX - boardView.origin.x) / grid).round();
+    final row = ((topLeftY - boardView.origin.y) / grid).round();
 
     final overlaps = row < Board.size &&
         row + shape.height > 0 &&
