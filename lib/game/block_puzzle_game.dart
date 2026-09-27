@@ -6,7 +6,7 @@
 import 'dart:async';
 import 'dart:math';
 
-import 'package:flame/flame.dart';
+import 'package:flame/game.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -257,7 +257,7 @@ class BlockPuzzleGame extends FlameGame {
     scoreNotifier.value = session.score;
 
     // The single, very light tick. Nothing else buzzes.
-    HapticFeedback.selectionClick();
+    unawaited(HapticFeedback.selectionClick());
     unawaited(audio.playPlace());
 
     if (result.linesCleared > 0) {
