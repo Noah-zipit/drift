@@ -22,15 +22,6 @@ import 'tray_component.dart';
 
 enum GamePhase { menu, playing, resolving, gameOver }
 
-class _GhostTarget {
-  _GhostTarget(this.row, this.col, this.valid, this.visible);
-
-  final int row;
-  final int col;
-  final bool valid;
-  final bool visible;
-}
-
 class BlockPuzzleGame extends FlameGame {
   static const _kBestKey = 'driftblocks.best_score';
 
@@ -48,11 +39,6 @@ class BlockPuzzleGame extends FlameGame {
 
   GamePhase _phase = GamePhase.menu;
   PieceComponent? _dragging;
-  _GhostTarget? _ghostTarget;
-
-  /// DIAGNOSTIC (temporary): last raw pointer position seen, so a screenshot
-  /// reveals whether the game, the piece, and the ghost agree on coordinates.
-  Vector2? debugPointer;
 
   int _best = 0;
   int lastScore = 0;
@@ -140,7 +126,6 @@ class BlockPuzzleGame extends FlameGame {
     lastScore = 0;
     lastWasBest = false;
     _dragging = null;
-    _ghostTarget = null;
 
     _phase = GamePhase.playing;
     overlays.remove('start');
@@ -154,7 +139,6 @@ class BlockPuzzleGame extends FlameGame {
   void toMenu() {
     _phase = GamePhase.menu;
     _dragging = null;
-    _ghostTarget = null;
     boardView.reset();
     trayView.clear();
     overlays.remove('gameover');
@@ -191,8 +175,6 @@ class BlockPuzzleGame extends FlameGame {
     }
     _dragging = piece;
     piece.pickUp();
-    debugPointer = pos.clone();
-    _updateGhost(pos);
   }
 
   void handlePanUpdate(Vector2 pos) {
@@ -201,57 +183,43 @@ class BlockPuzzleGame extends FlameGame {
       return;
     }
     piece.dragTo(pos);
-    debugPointer = pos.clone();
-    _updateGhost(pos);
   }
 
   void handlePanEnd() {
     final piece = _dragging;
     _dragging = null;
-    debugPointer = null;
-    final target = _ghostTarget;
-    _ghostTarget = null;
-    boardView.clearGhost();
     if (piece == null || _phase != GamePhase.playing) {
       return;
     }
-    if (target != null && target.visible && target.valid) {
-      unawaited(_doPlace(piece, target.row, target.col));
+    // No ghost preview: snap the drop point to the grid. If the piece sits
+    // on a valid row it goes straight in; otherwise it bounces back down
+    // to the tray.
+    final target = _snapTarget(piece);
+    if (target != null && session.board.canPlace(piece.shape, target.$1, target.$2)) {
+      unawaited(_doPlace(piece, target.$1, target.$2));
     } else {
       piece.returnToTray();
     }
   }
 
-  void _updateGhost(Vector2 pos) {
-    final piece = _dragging;
-    if (piece == null) {
-      _ghostTarget = null;
-      boardView.clearGhost();
-      return;
-    }
+  /// Snap the dragged piece's current position to a board (row, col), or
+  /// null when it isn't over the board at all.
+  (int, int)? _snapTarget(PieceComponent piece) {
     final shape = piece.shape;
-    // Use the piece's live rendered cell size (it grows to full board size
-    // on pickup) and the board view's actual grid, so the tinted preview
-    // hugs the dragged piece exactly instead of being drawn oversized.
     final c = piece.cellPx;
     final grid = boardView.cell;
-    final topLeftX = pos.x - shape.width * c / 2;
-    final topLeftY = pos.y - shape.height * c / 2;
+    final topLeftX = piece.position.x - shape.width * c / 2;
+    final topLeftY = piece.position.y - shape.height * c / 2;
     final col = ((topLeftX - boardView.origin.x) / grid).round();
     final row = ((topLeftY - boardView.origin.y) / grid).round();
-
     final overlaps = row < Board.size &&
         row + shape.height > 0 &&
         col < Board.size &&
         col + shape.width > 0;
     if (!overlaps) {
-      _ghostTarget = _GhostTarget(row, col, false, false);
-      boardView.clearGhost();
-      return;
+      return null;
     }
-    final valid = session.board.canPlace(shape, row, col);
-    _ghostTarget = _GhostTarget(row, col, valid, true);
-    boardView.setGhost(shape, row, col, valid);
+    return (row, col);
   }
 
   Future<void> _doPlace(PieceComponent piece, int row, int col) async {
@@ -328,44 +296,5 @@ class BlockPuzzleGame extends FlameGame {
   Future<void> _saveBest() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kBestKey, _best);
-  }
-
-  // --------------------------------------- DIAGNOSTIC overlay (temporary) ---
-
-  /// Draws crosshair at the raw pointer, a ring at the dragged piece's actual
-  /// position, and the ghost/piece internals as text. A screenshot of this
-  /// proves which of the three (pointer, piece, ghost) disagrees.
-  @override
-  void render(Canvas canvas) {
-    super.render(canvas);
-    final p = debugPointer;
-    final piece = _dragging;
-    if (p == null || piece == null) {
-      return;
-    }
-    final cross = Paint()
-      ..color = const Color(0xFFFF0000)
-      ..strokeWidth = 3.0;
-    canvas.drawLine(Offset(p.x - 16, p.y), Offset(p.x + 16, p.y), cross);
-    canvas.drawLine(Offset(p.x, p.y - 16), Offset(p.x, p.y + 16), cross);
-    canvas.drawCircle(
-      Offset(piece.position.x, piece.position.y),
-      20,
-      Paint()
-        ..color = const Color(0xFF00FF00)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 3.0,
-    );
-    final g = _ghostTarget;
-    final tp = TextPainter(
-      text: TextSpan(
-        text: 'ghost r=${g?.row} c=${g?.col} v=${g?.valid} | '
-            'animT=${piece.debugAnimT.toStringAsFixed(2)} | '
-            'cellPx=${piece.cellPx.toStringAsFixed(1)}',
-        style: const TextStyle(color: Color(0xFFFFFFFF), fontSize: 22),
-      ),
-      textDirection: TextDirection.ltr,
-    )..layout(maxWidth: size.x - 32);
-    tp.paint(canvas, Offset(16, size.y - 140));
   }
 }
