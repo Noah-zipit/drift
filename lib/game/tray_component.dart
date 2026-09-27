@@ -57,7 +57,7 @@ class TrayComponent extends Component with HasGameReference<BlockPuzzleGame> {
         homeCell: slotCellPx,
       )..spawn(delay: i * 0.09);
       slots[i] = component;
-      gameRef.add(component);
+      game.add(component);
     }
   }
 
@@ -97,7 +97,7 @@ class TrayComponent extends Component with HasGameReference<BlockPuzzleGame> {
     if (slotCentres.isEmpty) {
       return;
     }
-    final width = gameRef.size.x;
+    final width = game.size.x;
     final panel = RRect.fromRectAndRadius(
       Rect.fromLTWH(16, trayTop + 8, width - 32, trayHeight - 16),
       const Radius.circular(28),
