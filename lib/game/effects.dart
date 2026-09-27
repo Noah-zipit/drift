@@ -47,6 +47,27 @@ double easeOutBack(double t) {
   return 1.0 + c3 * u * u * u + c1 * u * u;
 }
 
+/// Bounce easing: falls fast, then bounces a few times settling at 1.
+/// Used for the invalid-drop return so the piece visibly bounces down
+/// into its tray slot.
+double easeOutBounce(double t) {
+  final k = clamp01(t);
+  const n1 = 7.5625;
+  const d1 = 2.75;
+  if (k < 1.0 / d1) {
+    return n1 * k * k;
+  } else if (k < 2.0 / d1) {
+    final u = k - 1.5 / d1;
+    return n1 * u * u + 0.75;
+  } else if (k < 2.5 / d1) {
+    final u = k - 2.25 / d1;
+    return n1 * u * u + 0.9375;
+  } else {
+    final u = k - 2.625 / d1;
+    return n1 * u * u + 0.984375;
+  }
+}
+
 // ------------------------------------------------------------ score layer
 
 /// Hosts transient effects (score popups, combo labels, sparkles).
