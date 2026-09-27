@@ -20,6 +20,8 @@ void main() {
     test('placement scores cells, no clear resets streak', () {
       final session = GameSession(rng: Random(7));
       session.tray[0] = TrayPiece(PieceShapes.byName('square2'), 1);
+      session.tray[1] = TrayPiece(dot(), 2);
+      session.tray[2] = TrayPiece(dot(), 3);
       final result = session.applyMove(0, 0, 0);
 
       expect(result.scoreGained, 4); // 4 cells, no lines
