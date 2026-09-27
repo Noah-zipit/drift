@@ -1,7 +1,8 @@
 // A draggable tray piece. Renders its shape as glossy rounded candy cells
 // and glides between the tray and the pointer with gentle tweens.
 
-import 'package:flame/flame.dart';
+import 'package:flame/components.dart';
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import '../models/piece_shape.dart';
@@ -148,16 +149,16 @@ class PieceComponent extends PositionComponent
       canvas.drawRRect(
         shadowRect,
         Paint()
-          ..color = const Color(0x14000000).withOpacity(0.08 * alpha)
+          ..color = const Color(0x14000000).withValues(alpha: 0.08 * alpha)
           ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 10),
       );
     }
 
-    final fill = Paint()..color = base.withOpacity(alpha);
+    final fill = Paint()..color = base.withValues(alpha: alpha);
     final light = Paint()
-      ..color = Palette.highlight(base).withOpacity(alpha * 0.8);
+      ..color = Palette.highlight(base).withValues(alpha: alpha * 0.8);
     final dark = Paint()
-      ..color = Palette.shade(base).withOpacity(alpha * 0.55);
+      ..color = Palette.shade(base).withValues(alpha: alpha * 0.55);
 
     for (final cell in shape.cells) {
       // Local coords: anchor is center, so top-left is -size/2.
