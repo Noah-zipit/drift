@@ -191,35 +191,52 @@ class BlockPuzzleGame extends FlameGame {
     if (piece == null || _phase != GamePhase.playing) {
       return;
     }
-    // No ghost preview: snap the drop point to the grid. If the piece sits
-    // on a valid row it goes straight in; otherwise it bounces back down
-    // to the tray.
-    final target = _snapTarget(piece);
-    if (target != null && session.board.canPlace(piece.shape, target.$1, target.$2)) {
+    // No ghost preview: snap the drop point to the nearest valid placement.
+    // If the piece sits on (or near) a valid row it goes straight in;
+    // otherwise it bounces back down to the tray.
+    final target = _nearestValidTarget(piece);
+    if (target != null) {
       unawaited(_doPlace(piece, target.$1, target.$2));
     } else {
       piece.returnToTray();
     }
   }
 
-  /// Snap the dragged piece's current position to a board (row, col), or
-  /// null when it isn't over the board at all.
-  (int, int)? _snapTarget(PieceComponent piece) {
+  /// Nearest valid board placement to the dragged piece's current position,
+  /// or null when nothing valid is within snap range. The search starts at
+  /// the piece's snapped cell and expands outward, so a drop that's a little
+  /// off under the finger still lands where the player meant it to instead
+  /// of bouncing. (canPlace already rejects out-of-bounds candidates.)
+  (int, int)? _nearestValidTarget(PieceComponent piece) {
     final shape = piece.shape;
     final c = piece.cellPx;
     final grid = boardView.cell;
+    final origin = boardView.origin;
     final topLeftX = piece.position.x - shape.width * c / 2;
     final topLeftY = piece.position.y - shape.height * c / 2;
-    final col = ((topLeftX - boardView.origin.x) / grid).round();
-    final row = ((topLeftY - boardView.origin.y) / grid).round();
-    final overlaps = row < Board.size &&
-        row + shape.height > 0 &&
-        col < Board.size &&
-        col + shape.width > 0;
-    if (!overlaps) {
-      return null;
+    final baseCol = ((topLeftX - origin.x) / grid).round();
+    final baseRow = ((topLeftY - origin.y) / grid).round();
+
+    const maxRadius = 2;
+    (int, int)? best;
+    var bestDist = double.infinity;
+    for (var dr = -maxRadius; dr <= maxRadius; dr++) {
+      for (var dc = -maxRadius; dc <= maxRadius; dc++) {
+        final r = baseRow + dr;
+        final c2 = baseCol + dc;
+        if (!session.board.canPlace(shape, r, c2)) {
+          continue;
+        }
+        final dx = (origin.x + c2 * grid) - topLeftX;
+        final dy = (origin.y + r * grid) - topLeftY;
+        final dist = dx * dx + dy * dy;
+        if (dist < bestDist) {
+          bestDist = dist;
+          best = (r, c2);
+        }
+      }
     }
-    return (row, col);
+    return best;
   }
 
   Future<void> _doPlace(PieceComponent piece, int row, int col) async {
