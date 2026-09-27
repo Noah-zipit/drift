@@ -49,6 +49,7 @@ class PieceComponent extends PositionComponent
   // Position tween (return-to-tray glide).
   double _animT = 1.0;
   double _animDur = 0.001;
+  bool _animBounce = false;
   final Vector2 _animFromPos = Vector2.zero();
   final Vector2 _animToPos = Vector2.zero();
 
@@ -75,9 +76,6 @@ class PieceComponent extends PositionComponent
 
   bool get isSpawning => _spawnDelay > 0 || _spawnT < 1.0;
 
-  /// DIAGNOSTIC: expose in-flight position-tween progress.
-  double get debugAnimT => _animT;
-
   /// Lifted by the pointer: grows to full board cell size.
   void pickUp() {
     dragging = true;
@@ -93,11 +91,12 @@ class PieceComponent extends PositionComponent
     position.setFrom(pointer);
   }
 
-  /// Glides back to its tray slot after an invalid drop.
+  /// Bounces back down to its tray slot after an invalid drop.
   void returnToTray() {
     dragging = false;
     priority = 20;
-    _startAnim(homePos.clone(), 0.35);
+    _animBounce = true;
+    _startAnim(homePos.clone(), 0.45);
     _startSizeTween(homeCellPx, 0.35);
   }
 
@@ -129,11 +128,14 @@ class PieceComponent extends PositionComponent
     }
     if (_animT < 1.0) {
       _animT = clamp01(_animT + dt / _animDur);
-      final e = easeInOutCubic(_animT);
+      final e = _animBounce ? easeOutBounce(_animT) : easeInOutCubic(_animT);
       position.setValues(
         _animFromPos.x + (_animToPos.x - _animFromPos.x) * e,
         _animFromPos.y + (_animToPos.y - _animFromPos.y) * e,
       );
+      if (_animT >= 1.0) {
+        _animBounce = false;
+      }
     }
     if (_sizeT < 1.0) {
       _sizeT = clamp01(_sizeT + dt / _sizeDur);
