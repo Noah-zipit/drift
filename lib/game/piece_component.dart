@@ -46,13 +46,19 @@ class PieceComponent extends PositionComponent
   double _spawnT = 1.0;
   double _spawnDelay = 0.0;
 
-  // Generic position/cell-size tween (pickup, return-to-tray).
+  // Position tween (return-to-tray glide).
   double _animT = 1.0;
   double _animDur = 0.001;
   final Vector2 _animFromPos = Vector2.zero();
   final Vector2 _animToPos = Vector2.zero();
-  double _animFromCell = 0.0;
-  double _animToCell = 0.0;
+
+  // Cell-size tween (pickup grow, tray shrink). Runs independently of the
+  // position tween so the piece always reaches full board size while held,
+  // even though the pointer position is followed exactly with no lag.
+  double _sizeT = 1.0;
+  double _sizeDur = 0.001;
+  double _sizeFrom = 0.0;
+  double _sizeTo = 0.0;
 
   void _syncSize() {
     size.setValues(shape.width * cellPx, shape.height * cellPx);
@@ -62,23 +68,23 @@ class PieceComponent extends PositionComponent
   void spawn({double delay = 0.0}) {
     _spawnT = 0.0;
     _spawnDelay = delay;
+    _sizeT = 1.0;
     cellPx = homeCellPx;
     _syncSize();
   }
 
   bool get isSpawning => _spawnDelay > 0 || _spawnT < 1.0;
 
-  /// Lifted by the pointer: glides to full board cell size.
+  /// Lifted by the pointer: grows to full board cell size.
   void pickUp() {
     dragging = true;
     priority = 40;
-    _startAnim(position.clone(), game.cell, 0.18);
+    _startSizeTween(game.cell, 0.18);
   }
 
-  /// Follows the pointer exactly; the glide comes from the pickup/return
-  /// tweens and the eased ghost, not from lagging behind the finger.
+  /// Follows the pointer exactly; the grow/shrink glide runs on its own
+  /// tween, not from lagging behind the finger.
   void dragTo(Vector2 pointer) {
-    _animT = 1.0;
     position.setFrom(pointer);
   }
 
@@ -86,7 +92,8 @@ class PieceComponent extends PositionComponent
   void returnToTray() {
     dragging = false;
     priority = 20;
-    _startAnim(homePos.clone(), homeCellPx, 0.35);
+    _startAnim(homePos.clone(), 0.35);
+    _startSizeTween(homeCellPx, 0.35);
   }
 
   /// Called when the piece is placed: the board takes over the visuals.
@@ -94,13 +101,18 @@ class PieceComponent extends PositionComponent
     dragging = false;
   }
 
-  void _startAnim(Vector2 toPos, double toCell, double duration) {
+  void _startAnim(Vector2 toPos, double duration) {
     _animFromPos.setFrom(position);
     _animToPos.setFrom(toPos);
-    _animFromCell = cellPx;
-    _animToCell = toCell;
     _animDur = duration;
     _animT = 0.0;
+  }
+
+  void _startSizeTween(double toCell, double duration) {
+    _sizeFrom = cellPx;
+    _sizeTo = toCell;
+    _sizeDur = duration;
+    _sizeT = 0.0;
   }
 
   @override
@@ -117,7 +129,10 @@ class PieceComponent extends PositionComponent
         _animFromPos.x + (_animToPos.x - _animFromPos.x) * e,
         _animFromPos.y + (_animToPos.y - _animFromPos.y) * e,
       );
-      cellPx = _animFromCell + (_animToCell - _animFromCell) * e;
+    }
+    if (_sizeT < 1.0) {
+      _sizeT = clamp01(_sizeT + dt / _sizeDur);
+      cellPx = _sizeFrom + (_sizeTo - _sizeFrom) * easeInOutCubic(_sizeT);
       _syncSize();
     }
   }
