@@ -6,6 +6,7 @@ import 'game/block_puzzle_game.dart';
 import 'game/hud_overlay.dart';
 import 'game/screens.dart';
 import 'theme/palette.dart';
+import 'ui/splash_screen.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +29,46 @@ Future<void> main() async {
         scaffoldBackgroundColor: Palette.background,
         useMaterial3: true,
       ),
-      home: Scaffold(
+      home: _AppRoot(game: game),
+    ),
+  );
+}
+
+/// Shows the splash animation first, then cross-fades into the game.
+class _AppRoot extends StatefulWidget {
+  const _AppRoot({required this.game});
+
+  final BlockPuzzleGame game;
+
+  @override
+  State<_AppRoot> createState() => _AppRootState();
+}
+
+class _AppRootState extends State<_AppRoot> {
+  bool _showSplash = true;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 450),
+      child: _showSplash
+          ? SplashScreen(
+              key: const ValueKey('splash'),
+              onDone: () => setState(() => _showSplash = false),
+            )
+          : _GameScreen(key: const ValueKey('game'), game: widget.game),
+    );
+  }
+}
+
+class _GameScreen extends StatelessWidget {
+  const _GameScreen({super.key, required this.game});
+
+  final BlockPuzzleGame game;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
         backgroundColor: Palette.background,
         body: SafeArea(
           // One gesture detector for the whole play area. Pointer positions
@@ -57,9 +97,9 @@ Future<void> main() async {
             ),
           ),
         ),
-      ),
-    ),
-  );
+      );
+    }
+  }
 }
 
 class _AudioLifecycle extends WidgetsBindingObserver {
