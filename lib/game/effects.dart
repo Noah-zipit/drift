@@ -4,7 +4,8 @@
 
 import 'dart:math';
 
-import 'package:flame/flame.dart';
+import 'package:flame/components.dart';
+import 'package:flame/game.dart';
 import 'package:flame/text.dart';
 import 'package:flutter/material.dart';
 
@@ -104,7 +105,7 @@ class ScorePopup extends PositionComponent {
       style: TextStyle(
         fontSize: 26,
         fontWeight: FontWeight.w800,
-        color: Palette.ink.withOpacity(alpha),
+        color: Palette.ink.withValues(alpha: alpha),
       ),
     );
     canvas.save();
@@ -156,7 +157,7 @@ class ComboLabel extends PositionComponent {
         fontSize: 28,
         fontWeight: FontWeight.w800,
         letterSpacing: 3.0,
-        color: Palette.crown.withOpacity(alpha),
+        color: Palette.crown.withValues(alpha: alpha),
       ),
     );
     canvas.save();
@@ -209,7 +210,7 @@ class SoftSparkle extends PositionComponent {
     canvas.drawCircle(
       Offset.zero,
       radius,
-      Paint()..color = _colour.withOpacity(alpha),
+      Paint()..color = _colour.withValues(alpha: alpha),
     );
   }
 }
