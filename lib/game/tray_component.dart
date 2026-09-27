@@ -1,7 +1,8 @@
 // The three-slot tray at the bottom of the screen. Draws its own soft
 // panel and owns the [PieceComponent]s resting in it.
 
-import 'package:flame/flame.dart';
+import 'package:flame/components.dart';
+import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import '../models/game_logic.dart';
@@ -99,7 +100,7 @@ class TrayComponent extends Component with HasGameReference<BlockPuzzleGame> {
     final width = gameRef.size.x;
     final panel = RRect.fromRectAndRadius(
       Rect.fromLTWH(16, trayTop + 8, width - 32, trayHeight - 16),
-      Radius.circular(28),
+      const Radius.circular(28),
     );
     canvas.drawRRect(panel, Paint()..color = Palette.traySurface);
   }
