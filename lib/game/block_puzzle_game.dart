@@ -50,6 +50,10 @@ class BlockPuzzleGame extends FlameGame {
   PieceComponent? _dragging;
   _GhostTarget? _ghostTarget;
 
+  /// DIAGNOSTIC (temporary): last raw pointer position seen, so a screenshot
+  /// reveals whether the game, the piece, and the ghost agree on coordinates.
+  Vector2? debugPointer;
+
   int _best = 0;
   int lastScore = 0;
   bool lastWasBest = false;
@@ -187,6 +191,7 @@ class BlockPuzzleGame extends FlameGame {
     }
     _dragging = piece;
     piece.pickUp();
+    debugPointer = pos.clone();
     _updateGhost(pos);
   }
 
@@ -196,12 +201,14 @@ class BlockPuzzleGame extends FlameGame {
       return;
     }
     piece.dragTo(pos);
+    debugPointer = pos.clone();
     _updateGhost(pos);
   }
 
   void handlePanEnd() {
     final piece = _dragging;
     _dragging = null;
+    debugPointer = null;
     final target = _ghostTarget;
     _ghostTarget = null;
     boardView.clearGhost();
@@ -321,5 +328,44 @@ class BlockPuzzleGame extends FlameGame {
   Future<void> _saveBest() async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setInt(_kBestKey, _best);
+  }
+
+  // --------------------------------------- DIAGNOSTIC overlay (temporary) ---
+
+  /// Draws crosshair at the raw pointer, a ring at the dragged piece's actual
+  /// position, and the ghost/piece internals as text. A screenshot of this
+  /// proves which of the three (pointer, piece, ghost) disagrees.
+  @override
+  void render(Canvas canvas) {
+    super.render(canvas);
+    final p = debugPointer;
+    final piece = _dragging;
+    if (p == null || piece == null) {
+      return;
+    }
+    final cross = Paint()
+      ..color = const Color(0xFFFF0000)
+      ..strokeWidth = 3.0;
+    canvas.drawLine(Offset(p.x - 16, p.y), Offset(p.x + 16, p.y), cross);
+    canvas.drawLine(Offset(p.x, p.y - 16), Offset(p.x, p.y + 16), cross);
+    canvas.drawCircle(
+      Offset(piece.position.x, piece.position.y),
+      20,
+      Paint()
+        ..color = const Color(0xFF00FF00)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3.0,
+    );
+    final g = _ghostTarget;
+    final tp = TextPainter(
+      text: TextSpan(
+        text: 'ghost r=${g?.row} c=${g?.col} v=${g?.valid} | '
+            'animT=${piece.debugAnimT.toStringAsFixed(2)} | '
+            'cellPx=${piece.cellPx.toStringAsFixed(1)}',
+        style: const TextStyle(color: Color(0xFFFFFFFF), fontSize: 22),
+      ),
+      textDirection: TextDirection.ltr,
+    )..layout(maxWidth: size.x - 32);
+    tp.paint(canvas, Offset(16, size.y - 140));
   }
 }
