@@ -1,5 +1,5 @@
-// Renders the 8x8 board: dark navy panel, glossy candy cells, ghost
-// preview, and the staggered pop animation used for line clears.
+// Renders the 8x8 board: dark navy panel, glossy candy cells,
+// and the staggered pop animation used for line clears.
 
 import 'package:flame/components.dart';
 import 'package:flutter/material.dart';
@@ -8,15 +8,6 @@ import '../models/board.dart';
 import '../models/piece_shape.dart';
 import '../theme/palette.dart';
 import 'effects.dart';
-
-class _Ghost {
-  _Ghost(this.shape, this.row, this.col, this.valid);
-
-  final PieceShape shape;
-  final int row;
-  final int col;
-  final bool valid;
-}
 
 /// Drawn in absolute game coordinates (a plain [Component]).
 class BoardComponent extends Component {
@@ -48,8 +39,6 @@ class BoardComponent extends Component {
   final List<List<double>> clearDelay =
       List.generate(Board.size, (_) => List.filled(Board.size, 0.0));
 
-  _Ghost? ghost;
-
   void layout(Vector2 boardOrigin, double cellSize) {
     origin = boardOrigin.clone();
     cell = cellSize;
@@ -64,7 +53,6 @@ class BoardComponent extends Component {
         clearDelay[r][c] = 0.0;
       }
     }
-    ghost = null;
   }
 
   /// Marks freshly placed cells; they settle in gently via [update].
@@ -97,14 +85,6 @@ class BoardComponent extends Component {
         origin.x + col * cell + cell / 2,
         origin.y + row * cell + cell / 2,
       );
-
-  void setGhost(PieceShape shape, int row, int col, bool valid) {
-    ghost = _Ghost(shape, row, col, valid);
-  }
-
-  void clearGhost() {
-    ghost = null;
-  }
 
   @override
   void update(double dt) {
@@ -220,33 +200,6 @@ class BoardComponent extends Component {
         canvas.drawRRect(
           shadeRect,
           Paint()..color = Palette.shade(base).withValues(alpha: alpha * 0.55),
-        );
-      }
-    }
-
-    // Ghost preview.
-    final g = ghost;
-    if (g != null) {
-      final tint = g.valid ? Palette.ghostValid : Palette.ghostInvalid;
-      final ghostAlpha = g.valid ? 0.38 : 0.30;
-      for (final pc in g.shape.cells) {
-        final r = g.row + pc.y;
-        final c = g.col + pc.x;
-        if (r < 0 || r >= Board.size || c < 0 || c >= Board.size) {
-          continue;
-        }
-        final rect = RRect.fromRectAndRadius(
-          Rect.fromLTWH(
-            origin.x + c * cell + gap,
-            origin.y + r * cell + gap,
-            cell - gap * 2,
-            cell - gap * 2,
-          ),
-          Radius.circular(cell * 0.2),
-        );
-        canvas.drawRRect(
-          rect,
-          Paint()..color = tint.withValues(alpha: ghostAlpha),
         );
       }
     }
