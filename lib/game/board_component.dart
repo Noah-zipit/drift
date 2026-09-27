@@ -2,7 +2,6 @@
 // preview, and the staggered pop animation used for line clears.
 
 import 'package:flame/components.dart';
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import '../models/board.dart';
