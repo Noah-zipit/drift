@@ -72,7 +72,7 @@ class PieceComponent extends PositionComponent
   void pickUp() {
     dragging = true;
     priority = 40;
-    _startAnim(position.clone(), gameRef.cell, 0.18);
+    _startAnim(position.clone(), game.cell, 0.18);
   }
 
   /// Follows the pointer exactly; the glide comes from the pickup/return
