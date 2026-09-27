@@ -56,12 +56,6 @@ class Palette {
   static Color shade(Color base) =>
       Color.lerp(base, const Color(0xFF000000), 0.22)!;
 
-  /// Ghost tint for a valid placement: white.
-  static const Color ghostValid = Color(0xFFFFFFFF);
-
-  /// Ghost tint for an invalid placement: soft red.
-  static const Color ghostInvalid = Color(0xFFE57373);
-
   /// Card / overlay surfaces: lighter indigo.
   static const Color card = Color(0xFF3A4496);
 
