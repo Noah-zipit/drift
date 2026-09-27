@@ -75,10 +75,15 @@ class PieceComponent extends PositionComponent
 
   bool get isSpawning => _spawnDelay > 0 || _spawnT < 1.0;
 
+  /// DIAGNOSTIC: expose in-flight position-tween progress.
+  double get debugAnimT => _animT;
+
   /// Lifted by the pointer: grows to full board cell size.
   void pickUp() {
     dragging = true;
     priority = 40;
+    // Cancel any in-flight return-to-tray glide so it can't fight the drag.
+    _animT = 1.0;
     _startSizeTween(game.cell, 0.18);
   }
 
