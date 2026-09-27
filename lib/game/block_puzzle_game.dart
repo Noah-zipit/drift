@@ -174,6 +174,7 @@ class BlockPuzzleGame extends FlameGame {
       return;
     }
     _dragging = piece;
+    boardView.clearPreview();
     piece.pickUp();
   }
 
@@ -183,11 +184,20 @@ class BlockPuzzleGame extends FlameGame {
       return;
     }
     piece.dragTo(pos);
+    // Live ghost preview: show exactly where the piece would snap if
+    // released right now, mirroring the drop resolution rule.
+    final target = _nearestValidTarget(piece);
+    if (target != null) {
+      boardView.setPreview(piece.shape, target.$1, target.$2, piece.colorIndex);
+    } else {
+      boardView.clearPreview();
+    }
   }
 
   void handlePanEnd() {
     final piece = _dragging;
     _dragging = null;
+    boardView.clearPreview();
     if (piece == null || _phase != GamePhase.playing) {
       return;
     }
