@@ -21,6 +21,7 @@ dependencies:
 
   # Best score + audio preferences persistence.
   shared_preferences: ^2.3.0
+  flutter_scene: ^0.23.0
 
 dev_dependencies:
   flutter_test:

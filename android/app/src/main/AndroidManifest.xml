@@ -29,6 +29,10 @@
         <meta-data
             android:name="flutterEmbedding"
             android:value="2" />
+        <!-- Required for flutter_scene (Flutter GPU) 3D rendering. -->
+        <meta-data
+            android:name="io.flutter.embedding.android.EnableFlutterGPU"
+            android:value="true" />
     </application>
     <!-- AGP 9 note: the `query` element some templates include is not needed
          here (no intent queries, no ads, no network). -->

@@ -1,5 +1,8 @@
 # Minimal, dependency-free lint set (no flutter_lints pin needed).
 analyzer:
+  exclude:
+    - build/**
+    - android/**
   language:
     strict-casts: true
     strict-raw-types: true

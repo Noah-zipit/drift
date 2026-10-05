@@ -12,7 +12,7 @@ android {
     defaultConfig {
         // TODO: replace with your real application ID before release.
         applicationId = "com.example.blockpuzzle"
-        minSdk = 23
+        minSdk = flutter.minSdkVersion
         targetSdk = 36
         versionCode = 1
         versionName = "0.1.0"
