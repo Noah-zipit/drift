@@ -91,7 +91,7 @@ function frameCube() {
   camera.aspect = window.innerWidth / window.innerHeight;
   const vHalf = THREE.MathUtils.degToRad(camera.fov / 2);
   const hHalf = Math.atan(Math.tan(vHalf) * camera.aspect);
-  const need = 2.6 / Math.tan(hHalf);
+  const need = 1.8 / Math.tan(hHalf);
   camera.position.set(0, 0.7, Math.max(7.4, need));
   scene.fog.near = camera.position.z * 1.15;
   scene.fog.far = camera.position.z * 2.2;
