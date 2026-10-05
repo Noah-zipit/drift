@@ -8,6 +8,7 @@ import '../../game/block_puzzle_game.dart';
 import '../../game/hud_overlay.dart';
 import '../../game/screens.dart';
 import '../../theme/palette.dart';
+import '../../ui/arcade_chrome.dart';
 
 class BlockPuzzleScreen extends StatefulWidget {
   const BlockPuzzleScreen({super.key});
@@ -75,38 +76,9 @@ class _BlockPuzzleScreenState extends State<BlockPuzzleScreen>
               Positioned(
                 top: 64,
                 left: 12,
-                child: _ArcadeBackButton(
-                  onTap: () => Navigator.of(context).pop(),
-                ),
+                child: const ArcadeBackButton(),
               ),
             ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Small circular back button that floats above the game, arcade-styled.
-class _ArcadeBackButton extends StatelessWidget {
-  const _ArcadeBackButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black.withValues(alpha: 0.28),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: const Padding(
-          padding: EdgeInsets.all(10),
-          child: Icon(
-            Icons.arrow_back_rounded,
-            color: Colors.white70,
-            size: 22,
           ),
         ),
       ),

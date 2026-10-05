@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_scene/scene.dart' hide Material;
 
 import '../../arcade/arcade_menu.dart';
+import '../../ui/arcade_chrome.dart';
 import 'helix_controller.dart';
 
 class HelixScreen extends StatefulWidget {
@@ -136,13 +137,10 @@ class _HelixScreenState extends State<HelixScreen> {
                     ),
                   ),
                 ),
-                Positioned(
+                const Positioned(
                   top: 14,
                   left: 12,
-                  child: _CircleButton(
-                    icon: Icons.arrow_back_rounded,
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
+                  child: ArcadeBackButton(),
                 ),
               ],
             ),
@@ -150,29 +148,6 @@ class _HelixScreenState extends State<HelixScreen> {
           if (_over)
             _GameOverCard(score: _score, best: _best, onRetry: _restart),
         ],
-      ),
-    );
-  }
-}
-
-class _CircleButton extends StatelessWidget {
-  const _CircleButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: Colors.black.withValues(alpha: 0.28),
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.all(10),
-          child: Icon(icon, color: Colors.white70, size: 22),
-        ),
       ),
     );
   }
@@ -205,6 +180,16 @@ class _GameOverCard extends StatelessWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Image.asset(
+                  'assets/icon/game_helix.png',
+                  width: 72,
+                  height: 72,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 14),
               const Text(
                 'Hit the red',
                 style: TextStyle(

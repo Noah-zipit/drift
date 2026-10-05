@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../arcade/arcade_menu.dart';
+import '../../ui/arcade_chrome.dart';
 
 class CubeScreen extends StatefulWidget {
   const CubeScreen({super.key});
@@ -40,22 +41,7 @@ class _CubeScreenState extends State<CubeScreen> {
               alignment: Alignment.topLeft,
               child: Padding(
                 padding: const EdgeInsets.all(12),
-                child: Material(
-                  color: Colors.black.withValues(alpha: 0.28),
-                  shape: const CircleBorder(),
-                  child: InkWell(
-                    customBorder: const CircleBorder(),
-                    onTap: () => Navigator.of(context).pop(),
-                    child: const Padding(
-                      padding: EdgeInsets.all(10),
-                      child: Icon(
-                        Icons.arrow_back_rounded,
-                        color: Colors.white70,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ),
+                child: const ArcadeBackButton(),
               ),
             ),
           ),
