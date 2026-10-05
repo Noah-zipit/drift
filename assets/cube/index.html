@@ -82,6 +82,23 @@ scene.fog = new THREE.Fog(ABYSS, 8, 16);
 const camera = new THREE.PerspectiveCamera(36, window.innerWidth / window.innerHeight, 0.1, 100);
 camera.position.set(0, 0.7, 7.4);
 
+// Frame the whole cube on narrow portrait screens. The fixed 7.4 distance
+// suits wide viewports, but on a phone the horizontal field of view
+// collapses and the cube overflows the screen. Push the camera back just
+// enough to fit the cube plus its ring, and keep the fog proportional so
+// the look stays identical everywhere.
+function frameCube() {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  const vHalf = THREE.MathUtils.degToRad(camera.fov / 2);
+  const hHalf = Math.atan(Math.tan(vHalf) * camera.aspect);
+  const need = 2.6 / Math.tan(hHalf);
+  camera.position.set(0, 0.7, Math.max(7.4, need));
+  scene.fog.near = camera.position.z * 1.15;
+  scene.fog.far = camera.position.z * 2.2;
+  camera.updateProjectionMatrix();
+}
+frameCube();
+
 scene.add(new THREE.HemisphereLight(FOAM, '#0a1418', 0.7));
 const key = new THREE.DirectionalLight(FOAM, 1.6);
 key.position.set(4, 6, 5);
@@ -309,8 +326,7 @@ function frame() {
 frame();
 
 window.addEventListener('resize', () => {
-  camera.aspect = window.innerWidth / window.innerHeight;
-  camera.updateProjectionMatrix();
+  frameCube();
   renderer.setSize(window.innerWidth, window.innerHeight);
 });
 </script>
