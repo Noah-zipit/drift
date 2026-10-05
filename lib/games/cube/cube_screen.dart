@@ -1,7 +1,8 @@
 // Rubik's cube: the exact portfolio specimen, rendered in a WebView from a
-// local Three.js page (assets/cube/index.html). Drag a stickered face to
-// twist that layer, drag the background to orbit. No extras — just the
-// floating cube.
+// local Three.js page (assets/cube/cube_bundle.html — a single self-contained
+// file: three.js + page inlined, so it loads with no base URL). Drag a
+// stickered face to twist that layer, drag the background to orbit. No
+// extras — just the floating cube.
 
 import 'package:flutter/material.dart';
 import 'package:webview_flutter/webview_flutter.dart';
@@ -24,7 +25,7 @@ class _CubeScreenState extends State<CubeScreen> {
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(ArcadePalette.abyss)
-      ..loadFlutterAsset('assets/cube/index.html');
+      ..loadFlutterAsset('assets/cube/cube_bundle.html');
   }
 
   @override
