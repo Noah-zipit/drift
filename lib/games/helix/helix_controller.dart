@@ -30,11 +30,11 @@ class HelixController {
 
   static const int sectorsPerLevel = 10;
   static const double levelGap = 3.2;
-  static const double towerR = 1.0;
-  static const double platInner = 1.35;
-  static const double platOuter = 3.3;
-  static const double platThick = 0.45;
-  static const double ballR = 0.34;
+  static const double towerR = 0.5;
+  static const double platInner = 0.7;
+  static const double platOuter = 2.7;
+  static const double platThick = 0.35;
+  static const double ballR = 0.32;
   static const double gravity = 32.0;
   static const double bounceV = 13.0;
   static const double smashV = -26.0;
@@ -75,8 +75,8 @@ class HelixController {
 
     camera = PerspectiveCamera(
       fovRadiansY: 42 * math.pi / 180,
-      position: vm.Vector3(6.5, 5.5, 6.5),
-      target: vm.Vector3(0, 0, 0),
+      position: vm.Vector3(5.2, 4.6, 5.2),
+      target: vm.Vector3(0.9, -1.0, 0),
     );
     scene.directionalLight = DirectionalLight(
       direction: vm.Vector3(-0.4, -1.0, -0.3),
@@ -265,8 +265,8 @@ class HelixController {
     ball.scale = vm.Vector3(1 / squash, squash, 1 / squash);
 
     // Camera follows the ball.
-    camera.position = vm.Vector3(6.5, _ballY + 5.0, 6.5);
-    camera.target = vm.Vector3(0, _ballY - 1.5, 0);
+    camera.position = vm.Vector3(5.2, _ballY + 4.0, 5.2);
+    camera.target = vm.Vector3(0.9, _ballY - 1.3, 0);
   }
 
   void _hitLevel(_Level level, double top) {

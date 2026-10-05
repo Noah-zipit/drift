@@ -23,6 +23,10 @@ dependencies:
   shared_preferences: ^2.3.0
   flutter_scene: ^0.23.0
 
+  # Rubik's cube renders in a WebView from a local Three.js page
+  # (assets/cube/) — the exact portfolio specimen, fully offline.
+  webview_flutter: ^4.13.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -33,3 +37,4 @@ flutter:
   assets:
     - assets/audio/
     - assets/icon/
+    - assets/cube/

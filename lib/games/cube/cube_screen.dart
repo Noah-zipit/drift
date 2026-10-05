@@ -1,11 +1,12 @@
-// Rubik's cube screen: the floating playable cube, nothing else.
-// The Android system back gesture returns to the arcade menu.
+// Rubik's cube: the exact portfolio specimen, rendered in a WebView from a
+// local Three.js page (assets/cube/index.html). Drag a stickered face to
+// twist that layer, drag the background to orbit. No extras — just the
+// floating cube.
 
 import 'package:flutter/material.dart';
-import 'package:flutter_scene/scene.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../../arcade/arcade_menu.dart';
-import 'cube_controller.dart';
 
 class CubeScreen extends StatefulWidget {
   const CubeScreen({super.key});
@@ -15,44 +16,50 @@ class CubeScreen extends StatefulWidget {
 }
 
 class _CubeScreenState extends State<CubeScreen> {
-  final _controller = CubeController();
-  bool _ready = false;
+  late final WebViewController _controller;
 
   @override
   void initState() {
     super.initState();
-    _controller.init().then((_) {
-      if (mounted) setState(() => _ready = true);
-    });
+    _controller = WebViewController()
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..setBackgroundColor(ArcadePalette.abyss)
+      ..loadFlutterAsset('assets/cube/index.html');
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: ArcadePalette.abyss,
-      body: _ready
-          ? LayoutBuilder(
-              builder: (context, constraints) {
-                final size = Size(
-                  constraints.maxWidth,
-                  constraints.maxHeight,
-                );
-                return GestureDetector(
-                  behavior: HitTestBehavior.opaque,
-                  onPanStart: (d) =>
-                      _controller.handleDown(d.localPosition, size),
-                  onPanUpdate: (d) => _controller.handleMove(d.localPosition),
-                  onPanEnd: (_) => _controller.handleUp(),
-                  onPanCancel: () => _controller.handleUp(),
-                  child: SceneView(
-                    _controller.scene,
-                    camera: _controller.camera,
-                    onTick: _controller.onTick,
+      body: Stack(
+        children: [
+          WebViewWidget(controller: _controller),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Material(
+                  color: Colors.black.withValues(alpha: 0.28),
+                  shape: const CircleBorder(),
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    onTap: () => Navigator.of(context).pop(),
+                    child: const Padding(
+                      padding: EdgeInsets.all(10),
+                      child: Icon(
+                        Icons.arrow_back_rounded,
+                        color: Colors.white70,
+                        size: 22,
+                      ),
+                    ),
                   ),
-                );
-              },
-            )
-          : const SizedBox.expand(),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

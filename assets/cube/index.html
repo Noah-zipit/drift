@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+<title>Cube</title>
+<style>
+  html, body {
+    margin: 0; padding: 0; width: 100%; height: 100%;
+    overflow: hidden; background: #04262c;
+    touch-action: none; -webkit-user-select: none; user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #stage { position: fixed; inset: 0; cursor: grab; touch-action: none; }
+  #stage:active { cursor: grabbing; }
+  canvas { display: block; }
+</style>
+<script type="importmap">
+{ "imports": { "three": "./three.module.js" } }
+</script>
+</head>
+<body>
+<div id="stage"></div>
+<script type="module">
+import * as THREE from 'three';
+import { RoundedBoxGeometry } from './RoundedBoxGeometry.js';
+
+const CORAL = '#ff6f61';
+const FOAM = '#e9f2ed';
+const ABYSS = '#04262c';
+const PLASTIC = '#121619';
+
+const FACE_COLORS = {
+  px: '#ff6f61', nx: '#d98e3b',
+  py: '#e9f2ed', ny: '#c9a227',
+  pz: '#2e8b7a', nz: '#2b5f9e',
+};
+
+const SPACING = 1;
+const CUBIE = 0.94;
+const STICKER = 0.62;
+const OFFSET = CUBIE / 2 + 0.006;
+const DRAG_PX = 14;
+
+function easeInOutCubic(p) {
+  return p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2;
+}
+
+function rotateGrid(g, axis, dir) {
+  const [x, y, z] = g;
+  if (axis === 0) return [x, -dir * z, dir * y];
+  if (axis === 1) return [dir * z, y, -dir * x];
+  return [-dir * y, dir * x, z];
+}
+
+function snapRotation(o) {
+  const q = Math.PI / 2;
+  o.rotation.set(
+    Math.round(o.rotation.x / q) * q,
+    Math.round(o.rotation.y / q) * q,
+    Math.round(o.rotation.z / q) * q
+  );
+}
+
+function dominantAxis(v) {
+  const ax = Math.abs(v.x), ay = Math.abs(v.y), az = Math.abs(v.z);
+  if (ax > ay) return ax > az ? 0 : 2;
+  return ay > az ? 1 : 2;
+}
+
+// ---------- renderer / scene ----------
+const stage = document.getElementById('stage');
+const renderer = new THREE.WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+renderer.setSize(window.innerWidth, window.innerHeight);
+stage.appendChild(renderer.domElement);
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(ABYSS);
+scene.fog = new THREE.Fog(ABYSS, 8, 16);
+
+const camera = new THREE.PerspectiveCamera(36, window.innerWidth / window.innerHeight, 0.1, 100);
+camera.position.set(0, 0.7, 7.4);
+
+scene.add(new THREE.HemisphereLight(FOAM, '#0a1418', 0.7));
+const key = new THREE.DirectionalLight(FOAM, 1.6);
+key.position.set(4, 6, 5);
+scene.add(key);
+const fill = new THREE.DirectionalLight(FOAM, 1.0);
+fill.position.set(-4, 5, -6);
+scene.add(fill);
+const accent = new THREE.PointLight(CORAL, 50, 22);
+accent.position.set(-4, -2, 3);
+scene.add(accent);
+
+// ---------- groups ----------
+const orbit = new THREE.Group();
+const spin = new THREE.Group();
+spin.rotation.y = 0.6;
+const holder = new THREE.Group();
+spin.add(holder);
+orbit.add(spin);
+scene.add(orbit);
+
+// foam ring
+const ring = new THREE.Mesh(
+  new THREE.TorusGeometry(2.6, 0.012, 12, 140),
+  new THREE.MeshBasicMaterial({ color: FOAM, transparent: true, opacity: 0.25, toneMapped: false })
+);
+ring.position.set(0, 0.1, 0);
+ring.rotation.x = Math.PI / 2.3;
+scene.add(ring);
+
+// ---------- cubies ----------
+const cubieGeo = new RoundedBoxGeometry(CUBIE, CUBIE, CUBIE, 4, 0.055);
+const plasticMat = new THREE.MeshPhysicalMaterial({
+  color: PLASTIC, roughness: 0.28, metalness: 0.25,
+  clearcoat: 1, clearcoatRoughness: 0.25,
+});
+const stickerGeo = new THREE.PlaneGeometry(STICKER, STICKER);
+
+function stickerMat(color) {
+  return new THREE.MeshStandardMaterial({ color, roughness: 0.35, metalness: 0.1 });
+}
+
+const cubies = [];
+for (let x = -1; x <= 1; x++) {
+  for (let y = -1; y <= 1; y++) {
+    for (let z = -1; z <= 1; z++) {
+      const cubie = new THREE.Group();
+      cubie.position.set(x * SPACING, y * SPACING, z * SPACING);
+      cubie.userData.grid = [x, y, z];
+      const body = new THREE.Mesh(cubieGeo, plasticMat);
+      body.userData.cubie = cubie;
+      cubie.add(body);
+      const add = (color, pos, rot) => {
+        const s = new THREE.Mesh(stickerGeo, stickerMat(color));
+        s.position.set(pos[0], pos[1], pos[2]);
+        s.rotation.set(rot[0], rot[1], rot[2]);
+        s.userData.cubie = cubie;
+        cubie.add(s);
+      };
+      if (x === 1) add(FACE_COLORS.px, [OFFSET, 0, 0], [0, Math.PI / 2, 0]);
+      if (x === -1) add(FACE_COLORS.nx, [-OFFSET, 0, 0], [0, -Math.PI / 2, 0]);
+      if (y === 1) add(FACE_COLORS.py, [0, OFFSET, 0], [-Math.PI / 2, 0, 0]);
+      if (y === -1) add(FACE_COLORS.ny, [0, -OFFSET, 0], [Math.PI / 2, 0, 0]);
+      if (z === 1) add(FACE_COLORS.pz, [0, 0, OFFSET], [0, 0, 0]);
+      if (z === -1) add(FACE_COLORS.nz, [0, 0, -OFFSET], [0, Math.PI, 0]);
+      holder.add(cubie);
+      cubies.push(cubie);
+    }
+  }
+}
+
+// ---------- twist state ----------
+let twist = null; // { pivot, members, axis, dir, t, dur }
+let idle = 10;
+let autoTimer = 0;
+let drag = null; // { mode:'twist'|'orbit', ... }
+
+function triggerTwist(axis, layer, dir) {
+  if (twist) return;
+  const pivot = new THREE.Group();
+  holder.add(pivot);
+  const members = holder.children.filter((c) => {
+    if (c === pivot) return false;
+    return c.userData.grid && c.userData.grid[axis] === layer;
+  });
+  if (members.length === 0) { holder.remove(pivot); return; }
+  members.forEach((m) => pivot.attach(m));
+  twist = { pivot, members, axis, dir, t: 0, dur: 0.55 };
+}
+
+function finishTwist(tw) {
+  tw.members.forEach((m) => {
+    const ng = rotateGrid(m.userData.grid, tw.axis, tw.dir);
+    m.userData.grid = ng;
+    holder.attach(m);
+    m.position.set(ng[0] * SPACING, ng[1] * SPACING, ng[2] * SPACING);
+    snapRotation(m);
+  });
+  holder.remove(tw.pivot);
+  twist = null;
+}
+
+// ---------- pointer interaction ----------
+const raycaster = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+
+function setRay(clientX, clientY) {
+  const rect = renderer.domElement.getBoundingClientRect();
+  ndc.set(
+    ((clientX - rect.left) / rect.width) * 2 - 1,
+    -((clientY - rect.top) / rect.height) * 2 + 1
+  );
+  raycaster.setFromCamera(ndc, camera);
+}
+
+function onDown(clientX, clientY) {
+  idle = 0; autoTimer = 0;
+  setRay(clientX, clientY);
+  const hits = raycaster.intersectObjects(holder.children, true);
+  const hit = hits.length ? hits[0] : null;
+  const cubie = hit ? hit.object.userData.cubie : null;
+  if (cubie && !twist && hit.face) {
+    const inv = holder.matrixWorld.clone().invert();
+    const nWorld = hit.face.normal.clone().transformDirection(hit.object.matrixWorld);
+    const nLocal = nWorld.transformDirection(inv);
+    const nAxis = dominantAxis(nLocal);
+    const nVec = new THREE.Vector3();
+    nVec.setComponent(nAxis, Math.sign(nLocal.getComponent(nAxis)) || 1);
+    const pLocal = holder.worldToLocal(hit.point.clone());
+    const plane = new THREE.Plane().setFromNormalAndCoplanarPoint(nVec, pLocal);
+    drag = {
+      mode: 'twist', normal: nVec, normalAxis: nAxis, plane,
+      startPoint: pLocal, grid: cubie.userData.grid.slice(),
+      startX: clientX, startY: clientY, consumed: false,
+    };
+  } else {
+    drag = { mode: 'orbit', lastX: clientX, lastY: clientY };
+  }
+}
+
+function onMove(clientX, clientY) {
+  if (!drag) return;
+  if (drag.mode === 'orbit') {
+    const dx = clientX - drag.lastX, dy = clientY - drag.lastY;
+    drag.lastX = clientX; drag.lastY = clientY;
+    orbit.rotation.y += dx * 0.008;
+    orbit.rotation.x = THREE.MathUtils.clamp(orbit.rotation.x + dy * 0.006, -0.9, 0.9);
+    idle = 0;
+    return;
+  }
+  if (drag.consumed || twist) return;
+  if (Math.hypot(clientX - drag.startX, clientY - drag.startY) < DRAG_PX) return;
+  setRay(clientX, clientY);
+  const ray = raycaster.ray;
+  const inv = holder.matrixWorld.clone().invert();
+  const origin = holder.worldToLocal(ray.origin.clone());
+  const direction = ray.direction.clone().transformDirection(inv);
+  const localRay = new THREE.Ray(origin, direction);
+  const p = new THREE.Vector3();
+  if (!localRay.intersectPlane(drag.plane, p)) return;
+  const v = p.sub(drag.startPoint);
+  v.addScaledVector(drag.normal, -v.dot(drag.normal));
+  let best = 0, bestVal = -1;
+  for (let i = 0; i < 3; i++) {
+    if (i === drag.normalAxis) continue;
+    const c = Math.abs(v.getComponent(i));
+    if (c > bestVal) { bestVal = c; best = i; }
+  }
+  if (bestVal < 1e-4) return;
+  const dragDir = new THREE.Vector3();
+  dragDir.setComponent(best, Math.sign(v.getComponent(best)));
+  const raw = new THREE.Vector3().crossVectors(drag.normal, dragDir);
+  const axis = dominantAxis(raw);
+  const dir = Math.sign(raw.getComponent(axis)) || 1;
+  drag.consumed = true;
+  triggerTwist(axis, drag.grid[axis], dir);
+  idle = 0;
+}
+
+function onUp() { drag = null; }
+
+const el = renderer.domElement;
+el.addEventListener('pointerdown', (e) => { e.preventDefault(); onDown(e.clientX, e.clientY); });
+window.addEventListener('pointermove', (e) => { if (drag) onMove(e.clientX, e.clientY); });
+window.addEventListener('pointerup', onUp);
+window.addEventListener('pointercancel', onUp);
+el.addEventListener('contextmenu', (e) => e.preventDefault());
+
+// ---------- loop ----------
+const clock = new THREE.Clock();
+function frame() {
+  requestAnimationFrame(frame);
+  const dt = Math.min(clock.getDelta(), 0.05);
+  const t = clock.elapsedTime;
+  idle += dt;
+
+  spin.rotation.y += dt * 0.1;
+  spin.position.y = Math.sin(t * 0.8) * 0.09;
+  ring.rotation.z = t * 0.1;
+
+  if (!twist) {
+    if (idle > 6 && !drag) {
+      autoTimer += dt;
+      if (autoTimer > 2.6) {
+        autoTimer = 0;
+        triggerTwist(
+          Math.floor(Math.random() * 3),
+          [-1, 0, 1][Math.floor(Math.random() * 3)],
+          Math.random() < 0.5 ? 1 : -1
+        );
+      }
+    }
+  } else {
+    twist.t += dt;
+    const p = Math.min(1, twist.t / twist.dur);
+    const angle = twist.dir * (Math.PI / 2) * easeInOutCubic(p);
+    twist.pivot.rotation.set(0, 0, 0);
+    if (twist.axis === 0) twist.pivot.rotation.x = angle;
+    else if (twist.axis === 1) twist.pivot.rotation.y = angle;
+    else twist.pivot.rotation.z = angle;
+    if (p >= 1) finishTwist(twist);
+  }
+
+  renderer.render(scene, camera);
+}
+frame();
+
+window.addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+});
+</script>
+</body>
+</html>
