@@ -1,4 +1,4 @@
-package com.example.blockpuzzle
+package com.ashar.drift
 
 import io.flutter.embedding.android.FlutterActivity
 
