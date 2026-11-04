@@ -179,7 +179,8 @@ image. Dependencies resolve at build time: `flame ^1.37.0`, `audioplayers
 - [x] Flame APIs cross-checked against current 1.x docs (only stable APIs used)
 - [x] Audio synthesized and validated (`ffprobe`: 72.000 s Vorbis loop, valid WAVs)
 - [x] App display name set to **Drift** (README title, start menu,
-  `MaterialApp.title`, `android:label`, `pubspec.yaml` description).
+  `android:label`, `pubspec.yaml` description; `MaterialApp.title` is
+  **Drift Arcade**, the name shown in the task switcher).
   SharedPreferences keys (`driftblocks.*`) intentionally unchanged so saved
   scores/audio prefs survive the rename.
 - [ ] `flutter analyze` — needs your Flutter SDK
