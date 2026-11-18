@@ -137,7 +137,7 @@ class HelixController {
     tower.add(node);
     final level = _Level(y: y, node: node);
     final r = math.Random();
-    final slot = math.pi * 2 / sectorsPerLevel;
+    const slot = math.pi * 2 / sectorsPerLevel;
 
     // Choose gaps and red sectors.
     final missing = <int>{};
@@ -155,13 +155,13 @@ class HelixController {
       }
     }
 
-    final mid = (platInner + platOuter) / 2;
-    final depth = platOuter - platInner;
+    const mid = (platInner + platOuter) / 2;
+    const depth = platOuter - platInner;
     final hueBase = (_levelCount * 0.045) % 1.0;
     for (var i = 0; i < sectorsPerLevel; i++) {
       if (missing.contains(i)) continue;
       final angle = i * slot;
-      final span = slot * 0.86;
+      const span = slot * 0.86;
       final width = 2 * mid * math.sin(span / 2);
       final isRed = reds.contains(i);
       final color = isRed
@@ -273,7 +273,7 @@ class HelixController {
     // Ball angle in tower-local space (ball sits at world +X).
     var local = (-_towerAngle) % (math.pi * 2);
     if (local < 0) local += math.pi * 2;
-    final slot = math.pi * 2 / sectorsPerLevel;
+    const slot = math.pi * 2 / sectorsPerLevel;
     _Sector? hit;
     for (final s in level.sectors) {
       var d = (local - s.angle).abs() % (math.pi * 2);

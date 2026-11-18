@@ -2,7 +2,6 @@
 // panel and owns the [PieceComponent]s resting in it.
 
 import 'package:flame/components.dart';
-import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
 import '../models/game_logic.dart';

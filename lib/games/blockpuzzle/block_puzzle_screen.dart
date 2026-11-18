@@ -73,10 +73,10 @@ class _BlockPuzzleScreenState extends State<BlockPuzzleScreen>
                 },
                 initialActiveOverlays: const ['start'],
               ),
-              Positioned(
+              const Positioned(
                 top: 64,
                 left: 12,
-                child: const ArcadeBackButton(),
+                child: ArcadeBackButton(),
               ),
             ],
           ),
