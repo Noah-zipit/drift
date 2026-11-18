@@ -36,12 +36,12 @@ class _CubeScreenState extends State<CubeScreen> {
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
-          SafeArea(
+          const SafeArea(
             child: Align(
               alignment: Alignment.topLeft,
               child: Padding(
-                padding: const EdgeInsets.all(12),
-                child: const ArcadeBackButton(),
+                padding: EdgeInsets.all(12),
+                child: ArcadeBackButton(),
               ),
             ),
           ),
