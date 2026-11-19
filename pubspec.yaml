@@ -18,6 +18,11 @@ dependencies:
   # PositionComponent, TextPaint, GameWidget + overlays).
   flame: ^1.37.0
 
+  # Imported directly by the helix/stack controllers (Vector3/Vector4 for
+  # flutter_scene nodes) — was only a transitive dep via flame, so declare
+  # it to satisfy the missing_dependency lint.
+  vector_math: ^2.4.3
+
   # Ambient pad loop + soft SFX (audioplayers directly: one looping music
   # player plus a small SFX pool).
   audioplayers: ^6.0.0
